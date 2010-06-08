@@ -25,7 +25,7 @@ def main():
     day_numbers = np.arange(0, 365.242, 0.01)
 #    plt.plot(day_numbers, equation_of_time(day_numbers))
     date_range = day_numbers + matplotlib.dates.date2num(datetime.date(2000,1,1))
-    plt.plot_date(date_range, equation_of_time(day_numbers), '-')
+    plt.plot_date(date_range, -equation_of_time(day_numbers), '-')
 
 #    plt.xlabel('day number')
 #    plt.xlim([min(day_numbers), max(day_numbers)])
@@ -38,13 +38,14 @@ def main():
     labels = ax.get_xticklabels()
     plt.setp(labels, rotation=30, fontsize=10)
 
-    plt.ylabel('solar time vs clock time (min)')
+#    plt.ylabel('solar time - clock time (min)')
+    plt.ylabel('clock time - solar time (min)')
     plt.grid(True)
 
     plt.show()
-#    plt.savefig('horiz.pdf')
-#    plt.savefig('horiz.svg')
-#    plt.savefig('horiz.png')
+#    plt.savefig('equation_of_time.pdf')
+#    plt.savefig('equation_of_time.svg')
+#    plt.savefig('equation_of_time.png')
 
 
 if __name__ == '__main__':

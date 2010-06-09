@@ -1,9 +1,27 @@
+"""
+Calculation of "equation of time".
+
+References:
+    http://en.wikipedia.org/wiki/Equation_of_time
+    http://www.sundials.co.uk/equation.htm
+
+Calculations have been done according to the Wikipedia reference.
+
+Dependencies:
+    - Python 2.x
+    - NumPy
+    - SciPy (only strictly needed for the more accurate calculation)
+    - matplotlib to plot the graph
+"""
+
+import datetime
 
 import numpy as np
-import scipy
+import scipy            # only strictly needed for the more accurate calculation in equation_of_time_accurate()
 import scipy.optimize
 
 
+DAYS_PER_TROPICAL_YEAR = 365.242
 SUN_ECCENTRICITY = 0.01671
 
 # The angle from the vernal equinox to the periapsis in the plane of the ecliptic.
@@ -13,8 +31,17 @@ SUN_ANGLE_OFFSET = 4.9358
 SUN_OBLIQUITY = 0.40910
 
 
+# Date range for drawing a graph.
+DATE_START = datetime.date(2009, 1, 1)
+DATE_END = datetime.date(2010, 1, 1)
+# Periapsis occurs on a slightly different date each year--varying by a couple
+# of days. 4th of January is about the average.
+DATE_PERIAPSIS = datetime.date(2009, 1, 4)
+
+
 def mean_anomaly(day_number_n):
-    return day_number_n * (2 * np.pi / 365.242)
+    """day_number_n is the number of days from periapsis."""
+    return day_number_n * (2 * np.pi / DAYS_PER_TROPICAL_YEAR)
 
 
 @np.vectorize
@@ -24,7 +51,8 @@ def eccentric_anomaly(mean_anomaly_value):
     def eccentric_anomaly_function(eccentric_anomaly_value):
         return eccentric_anomaly_value - local_sun_eccentricity * np.sin(eccentric_anomaly_value) - mean_anomaly_value
 
-    eccentric_anomaly_value = scipy.optimize.brentq(eccentric_anomaly_function, 0 - 0.0001, 2 * np.pi + 0.0001)
+#    eccentric_anomaly_value = scipy.optimize.brentq(eccentric_anomaly_function, 0 - 0.0001, 2 * np.pi + 0.0001)
+    eccentric_anomaly_value = scipy.optimize.fsolve(eccentric_anomaly_function, 1)
     return eccentric_anomaly_value
 
 
@@ -47,19 +75,29 @@ def right_ascension(sun_angle):
 
 
 def equation_of_time_accurate(day_number_n):
+    """Calculate the equation of time (in min), given a day number.
+    
+    day_number_n is the number of days from periapsis.
+    Returns the difference between solar time and clock time, in minutes.
+    This uses a more accurate calculation.
+    """
     mean_anomaly_value = mean_anomaly(day_number_n)
     eccentric_anomaly_value = eccentric_anomaly(mean_anomaly_value)
     true_anomaly_value = true_anomaly(eccentric_anomaly_value)
     right_ascension_value = right_ascension(true_anomaly_value + SUN_ANGLE_OFFSET)
     eot = mean_anomaly_value + SUN_ANGLE_OFFSET - right_ascension_value
-    # Get the angles into the range we want
+    # Get the angles into the range we want--that is, -pi to +pi
     eot = (eot + np.pi) % (2 * np.pi) - np.pi
     return eot * (24 * 60 / 2 / np.pi)
 
 
 def equation_of_time_simple(day_number_n):
-    """day_number_n is the day of the year. 1st Jan is day 0.
-    Returns the difference between solar time and clock time, in minutes."""
+    """Calculate the equation of time (in min), given a day number.
+    
+    day_number_n is the number of days from periapsis.
+    Returns the difference between solar time and clock time, in minutes.
+    This uses a simple, approximate calculation.
+    """
     mean_anomaly_value = mean_anomaly(day_number_n)
     return -7.655 * np.sin(mean_anomaly_value) + 9.873 * np.sin(2 * mean_anomaly_value + 3.588)
 
@@ -73,17 +111,15 @@ def main():
     #matplotlib.use('pdf')
     #matplotlib.use('svg')
     from matplotlib import pyplot as plt
-    import datetime
 
 
-    day_numbers = np.arange(0, 365.242, 0.1)
-#    plt.plot(day_numbers, equation_of_time(day_numbers))
-    date_range = day_numbers + matplotlib.dates.date2num(datetime.date(2000,1,1))
-    plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
+    date_range = np.arange(matplotlib.dates.date2num(DATE_START), matplotlib.dates.date2num(DATE_END), 0.1)
+    day_numbers = date_range - matplotlib.dates.date2num(DATE_PERIAPSIS)
+
+    # Plot the accurate and/or simple calculations of equation of time.
     plt.plot_date(date_range, equation_of_time_accurate(day_numbers), '-')
+#    plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
 
-#    plt.xlabel('day number')
-#    plt.xlim([min(day_numbers), max(day_numbers)])
     rule = matplotlib.dates.rrulewrapper(matplotlib.dates.MONTHLY)
     loc = matplotlib.dates.RRuleLocator(rule)
     formatter = matplotlib.dates.DateFormatter('%b')
@@ -93,14 +129,14 @@ def main():
     labels = ax.get_xticklabels()
     plt.setp(labels, rotation=30, fontsize=10)
 
-#    plt.ylabel('solar time - clock time (min)')
-    plt.ylabel('clock time - solar time (min)')
+    plt.ylabel('solar time - clock time (min)')
+#    plt.ylabel('clock time - solar time (min)')
     plt.grid(True)
 
-    plt.show()
-#    plt.savefig('equation_of_time.pdf')
-#    plt.savefig('equation_of_time.svg')
-#    plt.savefig('equation_of_time.png')
+#    plt.show()
+    plt.savefig('equation_of_time.pdf')
+    plt.savefig('equation_of_time.svg')
+    plt.savefig('equation_of_time.png')
 
 
 if __name__ == '__main__':

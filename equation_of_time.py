@@ -79,14 +79,8 @@ def main():
     day_numbers = np.arange(0, 365.242, 0.1)
 #    plt.plot(day_numbers, equation_of_time(day_numbers))
     date_range = day_numbers + matplotlib.dates.date2num(datetime.date(2000,1,1))
-    mean_anomaly_value = mean_anomaly(day_numbers)
-    eccentric_anomaly_value = eccentric_anomaly(mean_anomaly_value)
-    true_anomaly_value = true_anomaly(eccentric_anomaly_value)
-    right_ascension_value = right_ascension(true_anomaly_value + SUN_ANGLE_OFFSET)
-#    eot = [ equation_of_time(day_number) for day_number in day_numbers ]
     plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
     plt.plot_date(date_range, equation_of_time_accurate(day_numbers), '-')
-#    plt.plot_date(date_range, right_ascension_value, '-')
 
 #    plt.xlabel('day number')
 #    plt.xlim([min(day_numbers), max(day_numbers)])

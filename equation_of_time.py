@@ -4,13 +4,13 @@ import scipy
 import scipy.optimize
 
 
-sun_eccentricity = 0.01671
+SUN_ECCENTRICITY = 0.01671
 
 # The angle from the vernal equinox to the periapsis in the plane of the ecliptic.
-sun_angle_offset = 4.9358
+SUN_ANGLE_OFFSET = 4.9358
 
 # Angle of tilt of earth's axis--about 23.44 degrees
-sun_obliquity = 0.40910
+SUN_OBLIQUITY = 0.40910
 
 
 def mean_anomaly(day_number_n):
@@ -19,38 +19,39 @@ def mean_anomaly(day_number_n):
 
 @np.vectorize
 def eccentric_anomaly(mean_anomaly_value):
-    local_eccentricity = sun_eccentricity
+    local_sun_eccentricity = SUN_ECCENTRICITY
 
     def eccentric_anomaly_function(eccentric_anomaly_value):
-        return eccentric_anomaly_value - local_eccentricity * np.sin(eccentric_anomaly_value) - mean_anomaly_value
+        return eccentric_anomaly_value - local_sun_eccentricity * np.sin(eccentric_anomaly_value) - mean_anomaly_value
 
-    eccentric_anomaly_value = scipy.optimize.brentq(eccentric_anomaly_function, 0, 2 * np.pi)
+    eccentric_anomaly_value = scipy.optimize.brentq(eccentric_anomaly_function, 0 - 0.0001, 2 * np.pi + 0.0001)
     return eccentric_anomaly_value
 
 
 def true_anomaly(eccentric_anomaly_value):
-    local_eccentricity = sun_eccentricity
+    local_sun_eccentricity = SUN_ECCENTRICITY
 
     half_eccentric_anomaly = eccentric_anomaly_value / 2
     a_x = np.cos(half_eccentric_anomaly)
     a_y = np.sin(half_eccentric_anomaly)
-    a_y *= np.sqrt((1 + local_eccentricity) / (1 - local_eccentricity))
+    a_y *= np.sqrt((1 + local_sun_eccentricity) / (1 - local_sun_eccentricity))
     return 2 * np.arctan2(a_y, a_x)
+
 
 def right_ascension(sun_angle):
     """sun_angle is the angle from the vernal equinox to the Sun in the plane of the ecliptic.
-    It is the true_anomaly value plus the sun_angle_offset."""
+    It is the true_anomaly value plus the SUN_ANGLE_OFFSET."""
     a_x = np.cos(sun_angle)
     a_y = np.sin(sun_angle)
-    return np.arctan2(a_y * np.cos(sun_obliquity), a_x)
+    return np.arctan2(a_y * np.cos(SUN_OBLIQUITY), a_x)
 
 
 def equation_of_time_accurate(day_number_n):
     mean_anomaly_value = mean_anomaly(day_number_n)
     eccentric_anomaly_value = eccentric_anomaly(mean_anomaly_value)
     true_anomaly_value = true_anomaly(eccentric_anomaly_value)
-    right_ascension_value = right_ascension(true_anomaly_value + sun_angle_offset)
-    eot = mean_anomaly_value + sun_angle_offset - right_ascension_value
+    right_ascension_value = right_ascension(true_anomaly_value + SUN_ANGLE_OFFSET)
+    eot = mean_anomaly_value + SUN_ANGLE_OFFSET - right_ascension_value
     # Get the angles into the range we want
     eot = (eot + np.pi) % (2 * np.pi) - np.pi
     return eot * (24 * 60 / 2 / np.pi)
@@ -81,7 +82,7 @@ def main():
     mean_anomaly_value = mean_anomaly(day_numbers)
     eccentric_anomaly_value = eccentric_anomaly(mean_anomaly_value)
     true_anomaly_value = true_anomaly(eccentric_anomaly_value)
-    right_ascension_value = right_ascension(true_anomaly_value + sun_angle_offset)
+    right_ascension_value = right_ascension(true_anomaly_value + SUN_ANGLE_OFFSET)
 #    eot = [ equation_of_time(day_number) for day_number in day_numbers ]
     plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
     plt.plot_date(date_range, equation_of_time_accurate(day_numbers), '-')

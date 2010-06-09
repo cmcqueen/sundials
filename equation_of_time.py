@@ -1,17 +1,70 @@
 
 import numpy as np
+import scipy
+import scipy.optimize
 
 
-def M(day_number_n):
+sun_eccentricity = 0.01671
+
+# The angle from the vernal equinox to the periapsis in the plane of the ecliptic.
+sun_angle_offset = 4.9358
+
+# Angle of tilt of earth's axis--about 23.44 degrees
+sun_obliquity = 0.40910
+
+
+def mean_anomaly(day_number_n):
     return day_number_n * (2 * np.pi / 365.242)
+
+
+@np.vectorize
+def eccentric_anomaly(mean_anomaly_value):
+    local_eccentricity = sun_eccentricity
+
+    def eccentric_anomaly_function(eccentric_anomaly_value):
+        return eccentric_anomaly_value - local_eccentricity * np.sin(eccentric_anomaly_value) - mean_anomaly_value
+
+    eccentric_anomaly_value = scipy.optimize.brentq(eccentric_anomaly_function, 0, 2 * np.pi)
+    return eccentric_anomaly_value
+
+
+def true_anomaly(eccentric_anomaly_value):
+    local_eccentricity = sun_eccentricity
+
+    half_eccentric_anomaly = eccentric_anomaly_value / 2
+    a_x = np.cos(half_eccentric_anomaly)
+    a_y = np.sin(half_eccentric_anomaly)
+    a_y *= np.sqrt((1 + local_eccentricity) / (1 - local_eccentricity))
+    return 2 * np.arctan2(a_y, a_x)
+
+def right_ascension(sun_angle):
+    """sun_angle is the angle from the vernal equinox to the Sun in the plane of the ecliptic.
+    It is the true_anomaly value plus the sun_angle_offset."""
+    a_x = np.cos(sun_angle)
+    a_y = np.sin(sun_angle)
+    return np.arctan2(a_y * np.cos(sun_obliquity), a_x)
+
+
+def equation_of_time_accurate(day_number_n):
+    mean_anomaly_value = mean_anomaly(day_number_n)
+    eccentric_anomaly_value = eccentric_anomaly(mean_anomaly_value)
+    true_anomaly_value = true_anomaly(eccentric_anomaly_value)
+    right_ascension_value = right_ascension(true_anomaly_value + sun_angle_offset)
+    eot = mean_anomaly_value + sun_angle_offset - right_ascension_value
+    # Get the angles into the range we want
+    eot = (eot + np.pi) % (2 * np.pi) - np.pi
+    return eot * (24 * 60 / 2 / np.pi)
+
 
 def equation_of_time_simple(day_number_n):
     """day_number_n is the day of the year. 1st Jan is day 0.
     Returns the difference between solar time and clock time, in minutes."""
-    M_value = M(day_number_n)
-    return -7.655 * np.sin(M_value) + 9.873 * np.sin(2 * M_value + 3.588)
+    mean_anomaly_value = mean_anomaly(day_number_n)
+    return -7.655 * np.sin(mean_anomaly_value) + 9.873 * np.sin(2 * mean_anomaly_value + 3.588)
 
-equation_of_time = equation_of_time_simple
+
+#equation_of_time = equation_of_time_simple
+equation_of_time = equation_of_time_accurate
 
 
 def main():
@@ -22,10 +75,17 @@ def main():
     import datetime
 
 
-    day_numbers = np.arange(0, 365.242, 0.01)
+    day_numbers = np.arange(0, 365.242, 0.1)
 #    plt.plot(day_numbers, equation_of_time(day_numbers))
     date_range = day_numbers + matplotlib.dates.date2num(datetime.date(2000,1,1))
-    plt.plot_date(date_range, -equation_of_time(day_numbers), '-')
+    mean_anomaly_value = mean_anomaly(day_numbers)
+    eccentric_anomaly_value = eccentric_anomaly(mean_anomaly_value)
+    true_anomaly_value = true_anomaly(eccentric_anomaly_value)
+    right_ascension_value = right_ascension(true_anomaly_value + sun_angle_offset)
+#    eot = [ equation_of_time(day_number) for day_number in day_numbers ]
+    plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
+    plt.plot_date(date_range, equation_of_time_accurate(day_numbers), '-')
+#    plt.plot_date(date_range, right_ascension_value, '-')
 
 #    plt.xlabel('day number')
 #    plt.xlim([min(day_numbers), max(day_numbers)])

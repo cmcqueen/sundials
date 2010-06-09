@@ -43,9 +43,9 @@ def horiz_hour_angle(hour, location, timezone):
     equatorial_angle_from_solar_noon = equatorial_angle - np.pi
     logging.debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
     # negative (am) is towards the west; positive (pm) towards the east
-    a_x = np.sin(equatorial_angle_from_solar_noon)
-    a_y = np.cos(equatorial_angle_from_solar_noon)
-    horiz_angle_from_solar_noon = np.arctan2(a_x, a_y / np.sin(np.deg2rad(location.latitude)))
+    a_x = np.cos(equatorial_angle_from_solar_noon)
+    a_y = np.sin(equatorial_angle_from_solar_noon)
+    horiz_angle_from_solar_noon = np.arctan2(a_y, a_x / np.sin(np.deg2rad(location.latitude)))
     logging.debug("For hour %d, horiz angle from solar noon %g" % (hour, np.rad2deg(horiz_angle_from_solar_noon)))
 
     # Angle currently is angle referenced from solar noon, positive (pm) towards the east.

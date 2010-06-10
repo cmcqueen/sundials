@@ -133,10 +133,10 @@ def main():
 #    plt.ylabel('clock time - solar time (min)')
     plt.grid(True)
 
-#    plt.show()
-    plt.savefig('equation_of_time.pdf')
-    plt.savefig('equation_of_time.svg')
-    plt.savefig('equation_of_time.png')
+    plt.show()
+#    plt.savefig('equation_of_time.pdf')
+#    plt.savefig('equation_of_time.svg')
+#    plt.savefig('equation_of_time.png')
 
 
 if __name__ == '__main__':

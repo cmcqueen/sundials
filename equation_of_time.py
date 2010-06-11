@@ -52,7 +52,7 @@ def eccentric_anomaly(mean_anomaly_value):
         return eccentric_anomaly_value - local_sun_eccentricity * np.sin(eccentric_anomaly_value) - mean_anomaly_value
 
 #    eccentric_anomaly_value = scipy.optimize.brentq(eccentric_anomaly_function, 0 - 0.0001, 2 * np.pi + 0.0001)
-    eccentric_anomaly_value = scipy.optimize.fsolve(eccentric_anomaly_function, 1)
+    eccentric_anomaly_value = scipy.optimize.fsolve(eccentric_anomaly_function, mean_anomaly_value)
     return eccentric_anomaly_value
 
 

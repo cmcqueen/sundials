@@ -120,14 +120,17 @@ def main():
     plt.plot_date(date_range, equation_of_time_accurate(day_numbers), '-')
 #    plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
 
-    rule = matplotlib.dates.rrulewrapper(matplotlib.dates.MONTHLY)
-    loc = matplotlib.dates.RRuleLocator(rule)
-    formatter = matplotlib.dates.DateFormatter('%b')
+    # Set month lines
     ax = plt.subplot(111)
-    ax.xaxis.set_major_locator(loc)
-    ax.xaxis.set_major_formatter(formatter)
-    labels = ax.get_xticklabels()
-    plt.setp(labels, rotation=30, fontsize=10)
+    ax.xaxis.set_major_locator(matplotlib.dates.MonthLocator())
+    ax.xaxis.set_major_formatter(matplotlib.ticker.NullFormatter())
+    # Set month labels centred in the middle (actually on day 15) of each month.
+    ax.xaxis.set_minor_locator(matplotlib.dates.MonthLocator(bymonthday=15))
+    ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%b'))
+    for tick in ax.xaxis.get_minor_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
+
 
     plt.ylabel('solar time - clock time (min)')
 #    plt.ylabel('clock time - solar time (min)')

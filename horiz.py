@@ -1,3 +1,14 @@
+"""
+Calculation and generation of horizontal sundial.
+
+References:
+    http://en.wikipedia.org/wiki/Sundial
+
+Dependencies:
+    - Python 2.x
+    - NumPy
+    - matplotlib
+"""
 
 import logging
 from collections import namedtuple

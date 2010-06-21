@@ -1,4 +1,5 @@
 
+import datetime
 import logging
 from collections import namedtuple
 
@@ -10,6 +11,8 @@ from matplotlib import lines
 from matplotlib import text
 import matplotlib.patches
 import numpy as np
+
+import sun_declination
 
 
 #logging.basicConfig(level=logging.DEBUG)
@@ -26,6 +29,9 @@ HOUR_LINE_MAX = 19
 EXTENT_MAJOR = 1.2
 EXTENT_MINOR = 0.9
 NUMERAL_OFFSET = 1.1
+DATE_SCALE_X_EXTENT = 0.15
+DATE_SCALE_TICK_X = 0.1
+DATE_SCALE_TEXT_X = 0.025
 
 def equatorial_hour_angle(hour, location, timezone):
     """Midnight is angle 0.
@@ -120,17 +126,61 @@ def main():
 
     ax1.plot(analemmatic_positions_x, analemmatic_positions_y, '.')
 
+    # Draw date scale
+    # Max line
+    dates_y = []
+    for sun_angle in [-sun_declination.SUN_OBLIQUITY, sun_declination.SUN_OBLIQUITY]:
+        date_y = np.tan(sun_angle) * np.cos(np.deg2rad(LOCATION.latitude))
+        dates_y.append(date_y)
+        line = lines.Line2D([-DATE_SCALE_X_EXTENT, DATE_SCALE_X_EXTENT], [date_y, date_y])
+        ax1.add_line(line)
+    line = lines.Line2D([0,0], dates_y)
+    ax1.add_line(line)
+
+    DATE_SOLSTICE = datetime.date(2008, 12, 21)
+    month_starts_y = []
+    month_start_slopes = []
+    for month_number in range(1, 12 + 1):
+        month_start = datetime.date(2009, month_number, 1)
+        day_number = matplotlib.dates.date2num(month_start) - matplotlib.dates.date2num(DATE_SOLSTICE)
+        sun_angle = sun_declination.sun_declination(day_number)
+        sun_angle2 = sun_declination.sun_declination(day_number + 0.001)
+        month_start_slope = 1 if sun_angle2 >= sun_angle else -1
+        month_start_slopes.append(month_start_slope)
+        month_start_y = np.tan(sun_angle) * np.cos(np.deg2rad(LOCATION.latitude))
+        month_starts_y.append(month_start_y)
+    month_starts_y.append(month_starts_y[0])
+    month_start_slopes.append(month_start_slopes[0])
+    for month_number in range(1, 12 + 1):
+        month_start_y = month_starts_y[month_number - 1]
+        month_end_y = month_starts_y[month_number]
+        month_start_slope = month_start_slopes[month_number - 1]
+        month_end_slope = month_start_slopes[month_number]
+
+        # Add tick mark for month start
+        line = lines.Line2D([0, month_start_slope * DATE_SCALE_TICK_X], [month_start_y, month_start_y])
+        ax1.add_line(line)
+
+        # Add text for month name, in the middle of the month
+        if month_start_slope == month_end_slope:
+            text_y = (month_start_y + month_end_y) / 2
+            month_name = datetime.date(2009,month_number,1).strftime("%b")
+            ha = 'left' if month_start_slope >= 0 else 'right'
+            ax1.add_artist(text.Text(DATE_SCALE_TEXT_X * month_start_slope, text_y, month_name, ha=ha, va='center'))
+
+
     # Draw a compass arrow
-    if LOCATION.latitude >= 0:
-        # Up for northern hemisphere
-        ax1.add_artist(text.Text(0, -0.25, "N", ha='center', va='center'))
-        arrow = matplotlib.patches.Arrow(0, -0.6, 0, 0.3, width=0.1, edgecolor='none')
-        ax1.add_patch(arrow)
-    else:
-        # Down for the southern hemisphere
-        ax1.add_artist(text.Text(0, -0.6, "N", ha='center', va='center'))
-        arrow = matplotlib.patches.Arrow(0, -0.25, 0, -0.3, width=0.1, edgecolor='none')
-        ax1.add_patch(arrow)
+    if 0:
+        if LOCATION.latitude >= 0:
+            # Up for northern hemisphere
+            ax1.add_artist(text.Text(0, -0.25, "N", ha='center', va='center'))
+            arrow = matplotlib.patches.Arrow(0, -0.6, 0, 0.3, width=0.1, edgecolor='none')
+            ax1.add_patch(arrow)
+        else:
+            # Down for the southern hemisphere
+            ax1.add_artist(text.Text(0, -0.6, "N", ha='center', va='center'))
+            arrow = matplotlib.patches.Arrow(0, -0.25, 0, -0.3, width=0.1, edgecolor='none')
+            ax1.add_patch(arrow)
 
     #plt.axis('tight')
     plt.axis('off')

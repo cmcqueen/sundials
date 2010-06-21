@@ -41,7 +41,7 @@ def sun_declination_simple(day_number_n):
     Returns the sun's declination, in radians.
     This uses a simple, approximate calculation.
     """
-    return SUN_OBLIQUITY * np.cos((2 * np.pi / DAYS_PER_TROPICAL_YEAR) * day_number_n)
+    return -SUN_OBLIQUITY * np.cos((2 * np.pi / DAYS_PER_TROPICAL_YEAR) * day_number_n)
 
 
 sun_declination = sun_declination_simple

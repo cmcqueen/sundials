@@ -1,3 +1,17 @@
+"""
+Calculation and generation of analemmatic sundial.
+
+References:
+    http://pass.maths.org.uk/issue11/features/sundials/index.html
+    http://en.wikipedia.org/wiki/Analemmatic_sundial
+
+Calculations have been done according to the Plus Magazine reference.
+
+Dependencies:
+    - Python 2.x
+    - NumPy
+    - matplotlib
+"""
 
 import datetime
 import logging
@@ -21,6 +35,7 @@ import sun_declination
 Location = namedtuple('Location', 'latitude, longitude')
 
 
+#LOCATION = Location(51.3809, -2.3603)   # Bath, England
 LOCATION = Location(35.10, 138.86)      # Numazu, Japan
 #LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
 TIMEZONE = 9
@@ -147,6 +162,11 @@ def main():
         sun_angle2 = sun_declination.sun_declination(day_number + 0.001)
         month_start_slope = 1 if sun_angle2 >= sun_angle else -1
         month_start_slopes.append(month_start_slope)
+        if LOCATION.latitude < 0:
+            sun_angle = -sun_angle
+            sun_angle2 = -sun_angle2
+#        month_start_slope = 1 if sun_angle2 >= sun_angle else -1
+#        month_start_slopes.append(month_start_slope)
         month_start_y = np.tan(sun_angle) * np.cos(np.deg2rad(LOCATION.latitude))
         month_starts_y.append(month_start_y)
     month_starts_y.append(month_starts_y[0])

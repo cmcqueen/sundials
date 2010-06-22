@@ -43,7 +43,7 @@ TIMEZONE = 9
 HOUR_LINE_MIN = 5
 HOUR_LINE_MAX = 19
 EXTENT_MAJOR = 1.2
-EXTENT_MINOR = 0.9
+EXTENT_MINOR = 0.75
 NUMERAL_OFFSET = 1.1
 DATE_SCALE_X_EXTENT = 0.15
 DATE_SCALE_TICK_X = 0.1
@@ -98,7 +98,8 @@ def analemmatic_horiz_hour_position(hour, location, timezone):
 
 def main():
     fig = plt.figure()
-    ax1 = fig.add_subplot(111, aspect='equal')
+#    ax1 = fig.add_subplot(111, aspect='equal')
+    ax1 = fig.add_axes([0,0,1.0,1.0], aspect='equal')
 
     # Calculate ellipse parameters
     ellipse_major_axis = 1.0
@@ -216,11 +217,11 @@ def main():
         arrow = matplotlib.patches.Arrow(0.5, 0.15, 0, -0.25, width=0.08, edgecolor='none')
         ax1.add_patch(arrow)
 
-    #plt.axis('tight')
+#    plt.axis('tight')
     plt.axis('off')
     
     plt.xlim(-EXTENT_MAJOR, EXTENT_MAJOR)
-    plt.ylim(-EXTENT_MINOR, EXTENT_MAJOR)
+    plt.ylim(-EXTENT_MINOR, EXTENT_MINOR)
 
     plt.show()
 #    plt.savefig('analemmatic.pdf')

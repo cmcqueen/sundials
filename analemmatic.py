@@ -37,9 +37,9 @@ Location = namedtuple('Location', 'latitude, longitude')
 
 
 #LOCATION = Location(51.3809, -2.3603)   # Bath, England
-#LOCATION = Location(35.10, 138.86)      # Numazu, Japan
-LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
-TIMEZONE = 10
+LOCATION = Location(35.10, 138.86)      # Numazu, Japan
+#LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
+TIMEZONE = 9
 HOUR_LINE_MIN = 5
 HOUR_LINE_MAX = 19
 EXTENT_MAJOR = 1.2
@@ -205,17 +205,16 @@ def main():
 
 
     # Draw a compass arrow
-    if 0:
-        if LOCATION.latitude >= 0:
-            # Up for northern hemisphere
-            ax1.add_artist(text.Text(0, -0.25, "N", ha='center', va='center'))
-            arrow = matplotlib.patches.Arrow(0, -0.6, 0, 0.3, width=0.1, edgecolor='none')
-            ax1.add_patch(arrow)
-        else:
-            # Down for the southern hemisphere
-            ax1.add_artist(text.Text(0, -0.6, "N", ha='center', va='center'))
-            arrow = matplotlib.patches.Arrow(0, -0.25, 0, -0.3, width=0.1, edgecolor='none')
-            ax1.add_patch(arrow)
+    if LOCATION.latitude >= 0:
+        # Up for northern hemisphere
+        ax1.add_artist(text.Text(0.5, 0.15, "N", ha='center', va='center'))
+        arrow = matplotlib.patches.Arrow(0.5, -0.15, 0, 0.25, width=0.08, edgecolor='none')
+        ax1.add_patch(arrow)
+    else:
+        # Down for the southern hemisphere
+        ax1.add_artist(text.Text(0.5, -0.15, "N", ha='center', va='center'))
+        arrow = matplotlib.patches.Arrow(0.5, 0.15, 0, -0.25, width=0.08, edgecolor='none')
+        ax1.add_patch(arrow)
 
     #plt.axis('tight')
     plt.axis('off')

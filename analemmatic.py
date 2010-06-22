@@ -2,8 +2,8 @@
 Calculation and generation of analemmatic sundial.
 
 References:
-    http://pass.maths.org.uk/issue11/features/sundials/index.html
-    http://en.wikipedia.org/wiki/Analemmatic_sundial
+    Plus Magazine http://pass.maths.org.uk/issue11/features/sundials/index.html
+    Wikipedia     http://en.wikipedia.org/wiki/Analemmatic_sundial
 
 Calculations have been done according to the Plus Magazine reference.
 
@@ -16,6 +16,7 @@ Dependencies:
 import datetime
 import logging
 from collections import namedtuple
+import sys
 
 import matplotlib
 #matplotlib.use('pdf')
@@ -29,16 +30,16 @@ import numpy as np
 import sun_declination
 
 
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 # Named tuple to hold geographic location
 Location = namedtuple('Location', 'latitude, longitude')
 
 
 #LOCATION = Location(51.3809, -2.3603)   # Bath, England
-LOCATION = Location(35.10, 138.86)      # Numazu, Japan
-#LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
-TIMEZONE = 9
+#LOCATION = Location(35.10, 138.86)      # Numazu, Japan
+LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
+TIMEZONE = 10
 HOUR_LINE_MIN = 5
 HOUR_LINE_MAX = 19
 EXTENT_MAJOR = 1.2
@@ -54,7 +55,7 @@ def equatorial_hour_angle(hour, location, timezone):
     midday is angle pi.
     etc."""
     equatorial_angle = (hour - timezone) * 2 * np.pi / 24 + (np.deg2rad(location.longitude))
-    logging.debug("For hour %d, equatorial angle %g" % (hour, np.rad2deg(equatorial_angle)))
+    logging.getLogger("hour.angle.equ").debug("For hour %d, equatorial angle %g" % (hour, np.rad2deg(equatorial_angle)))
     return equatorial_angle
 
 
@@ -74,12 +75,12 @@ def rotated_equatorial_hour_angle(hour, location, timezone):
 def analemmatic_horiz_hour_angle(hour, location, timezone):
     equatorial_angle = equatorial_hour_angle(hour, location, timezone)
     equatorial_angle_from_solar_noon = equatorial_angle - np.pi
-    logging.debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
+    logging.getLogger("hour.angle.equ.noon").debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
     # negative (am) is towards the west; positive (pm) towards the east
     a_x = np.cos(equatorial_angle_from_solar_noon)
     a_y = np.sin(equatorial_angle_from_solar_noon)
     horiz_angle_from_solar_noon = np.arctan2(a_y, a_x * np.sin(np.deg2rad(location.latitude)))
-    logging.debug("For hour %d, horiz angle from solar noon %g" % (hour, np.rad2deg(horiz_angle_from_solar_noon)))
+    logging.getLogger("hour.angle.horiz.noon").debug("For hour %d, horiz angle from solar noon %g" % (hour, np.rad2deg(horiz_angle_from_solar_noon)))
 
     # Angle currently is angle referenced from solar noon, positive (pm) towards the east.
     # Change to mathematical angle, anticlockwise from 0 in the east.
@@ -91,6 +92,7 @@ def analemmatic_horiz_hour_position(hour, location, timezone):
     a_x = np.cos(rotated_equatorial_angle)
     a_y = np.sin(rotated_equatorial_angle)
     a_y *= np.sin(np.deg2rad(location.latitude))
+    logging.getLogger("hour.pos").debug("For hour %d, x-y position (%g, %g)" % (hour, a_x, a_y))
     return (a_x, a_y)
 
 
@@ -98,6 +100,14 @@ def main():
     fig = plt.figure()
     ax1 = fig.add_subplot(111, aspect='equal')
 
+    # Calculate ellipse parameters
+    ellipse_major_axis = 1.0
+    ellipse_minor_axis = ellipse_major_axis * np.sin(np.deg2rad(LOCATION.latitude))
+    ellipse_foci_offset = np.sqrt(ellipse_major_axis**2 - ellipse_minor_axis**2)
+    ellipse_logger = logging.getLogger("ellipse")
+    ellipse_logger.info("Ellipse semimajor axis length %g" % ellipse_major_axis)
+    ellipse_logger.info("Ellipse semiminor axis length %g" % ellipse_minor_axis)
+    ellipse_logger.info("Ellipse foci x offset %g" % ellipse_foci_offset)
     # Draw an ellipse arc
     ellipse_angle_min = rotated_equatorial_hour_angle(HOUR_LINE_MIN, LOCATION, TIMEZONE)
     ellipse_angle_max = rotated_equatorial_hour_angle(HOUR_LINE_MAX, LOCATION, TIMEZONE)
@@ -108,14 +118,12 @@ def main():
         # perspective with the sun behind their shoulder.
         ellipse_rotation = 180
     ellipse = matplotlib.patches.Arc(xy=(0,0),  # centre of ellipse
-                                     width=2,
-                                     height=2*np.sin(np.deg2rad(LOCATION.latitude)),
+                                     width=2 * ellipse_major_axis,
+                                     height=2 * ellipse_minor_axis,
                                      angle=ellipse_rotation,
                                      theta1=np.rad2deg(ellipse_angle_max),
                                      theta2=np.rad2deg(ellipse_angle_min),
-#                                     theta1=0,
-#                                     theta2=135
-                                     )
+                                    )
     ax1.add_patch(ellipse)
 
     analemmatic_positions_x = []
@@ -129,7 +137,8 @@ def main():
             # perspective with the sun behind their shoulder.
             analemmatic_angle += np.deg2rad(180)
             (analemmatic_position_x, analemmatic_position_y) = (-analemmatic_position_x, -analemmatic_position_y)
-        logging.info("For hour %d, horiz angle %g" % (hour, np.rad2deg(analemmatic_angle)))
+        logging.getLogger("hour.angle.horiz").info("For hour %d, horiz angle %g" % (hour, np.rad2deg(analemmatic_angle)))
+        logging.getLogger("hour.pos").info("For hour %d, x-y position (%g, %g)" % (hour, analemmatic_position_x, analemmatic_position_y))
         line = lines.Line2D([0, np.cos(analemmatic_angle)], [0, np.sin(analemmatic_angle)])
 #        ax1.add_line(line)
 #        ax1.plot(analemmatic_position_x, analemmatic_position_y, '.')
@@ -142,16 +151,20 @@ def main():
     ax1.plot(analemmatic_positions_x, analemmatic_positions_y, '.')
 
     # Draw date scale
-    # Max line
+    datescale_logger = logging.getLogger("datescale")
+    # Max and min lines
     dates_y = []
     for sun_angle in [-sun_declination.SUN_OBLIQUITY, sun_declination.SUN_OBLIQUITY]:
         date_y = np.tan(sun_angle) * np.cos(np.deg2rad(LOCATION.latitude))
         dates_y.append(date_y)
         line = lines.Line2D([-DATE_SCALE_X_EXTENT, DATE_SCALE_X_EXTENT], [date_y, date_y])
         ax1.add_line(line)
+    # Draw vertical line of date scale
     line = lines.Line2D([0,0], dates_y)
     ax1.add_line(line)
+    datescale_logger.info("Date scale max and min y positions at %g and %g" % tuple(dates_y))
 
+    # Draw month ticks and month labels on date scale
     DATE_SOLSTICE = datetime.date(2008, 12, 21)
     month_starts_y = []
     month_start_slopes = []
@@ -169,6 +182,8 @@ def main():
 #        month_start_slopes.append(month_start_slope)
         month_start_y = np.tan(sun_angle) * np.cos(np.deg2rad(LOCATION.latitude))
         month_starts_y.append(month_start_y)
+        month_name = month_start.strftime("%b")
+        datescale_logger.info("For beginning of %s, y position %g" % (month_name, month_start_y))
     month_starts_y.append(month_starts_y[0])
     month_start_slopes.append(month_start_slopes[0])
     for month_number in range(1, 12 + 1):

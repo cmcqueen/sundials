@@ -1,3 +1,14 @@
+"""
+Calculation and generation of horizontal sundial.
+
+References:
+    http://en.wikipedia.org/wiki/Sundial
+
+Dependencies:
+    - Python 2.x
+    - NumPy
+    - matplotlib
+"""
 
 import logging
 from collections import namedtuple
@@ -11,7 +22,7 @@ from matplotlib import text
 import numpy as np
 
 
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Named tuple to hold geographic location
 Location = namedtuple('Location', 'latitude, longitude')
@@ -34,19 +45,19 @@ def equatorial_hour_angle(hour, location, timezone):
     midday is angle pi.
     etc."""
     equatorial_angle = (hour - timezone) * 2 * np.pi / 24 + (np.deg2rad(location.longitude))
-    logging.debug("For hour %d, equatorial angle %g" % (hour, np.rad2deg(equatorial_angle)))
+    logging.getLogger("hour.angle.equ").debug("For hour %d, equatorial angle %g" % (hour, np.rad2deg(equatorial_angle)))
     return equatorial_angle
 
 
 def horiz_hour_angle(hour, location, timezone):
     equatorial_angle = equatorial_hour_angle(hour, location, timezone)
     equatorial_angle_from_solar_noon = equatorial_angle - np.pi
-    logging.debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
+    logging.getLogger("hour.angle.equ.noon").debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
     # negative (am) is towards the west; positive (pm) towards the east
     a_x = np.cos(equatorial_angle_from_solar_noon)
     a_y = np.sin(equatorial_angle_from_solar_noon)
     horiz_angle_from_solar_noon = np.arctan2(a_y, a_x / np.sin(np.deg2rad(location.latitude)))
-    logging.debug("For hour %d, horiz angle from solar noon %g" % (hour, np.rad2deg(horiz_angle_from_solar_noon)))
+    logging.getLogger("hour.angle.horiz.noon").debug("For hour %d, horiz angle from solar noon %g" % (hour, np.rad2deg(horiz_angle_from_solar_noon)))
 
     # Angle currently is angle referenced from solar noon, positive (pm) towards the east.
     # Change to mathematical angle, anticlockwise from 0 in the east.
@@ -57,6 +68,7 @@ def main():
     fig = plt.figure()
     ax1 = fig.add_subplot(111, aspect='equal')
 
+    hour_angle_logger = logging.getLogger("hour.angle.horiz")
     for hour in range(HOUR_LINE_MIN, HOUR_LINE_MAX + 1):
         horiz_angle = horiz_hour_angle(hour, LOCATION, TIMEZONE)
         if LOCATION.latitude < 0:
@@ -64,7 +76,7 @@ def main():
             # degrees, so "up" is consistently from the sundial viewer's
             # perspective with the sun behind their shoulder.
             horiz_angle += np.deg2rad(180)
-        logging.info("For hour %d, horiz angle %g" % (hour, np.rad2deg(horiz_angle)))
+        hour_angle_logger.info("For hour %d, horiz angle %g" % (hour, np.rad2deg(horiz_angle)))
         line = lines.Line2D([0, np.cos(horiz_angle)], [0, np.sin(horiz_angle)])
         ax1.add_line(line)
         hour_text = "%d" % ((hour - 1) % 12 + 1)

@@ -106,10 +106,10 @@ def main():
     plt.xlim(-EXTENT_MAJOR, EXTENT_MAJOR)
     plt.ylim(-EXTENT_MINOR, EXTENT_MAJOR)
 
-#    plt.show()
+    plt.show()
 #    plt.savefig('horiz.pdf')
 #    plt.savefig('horiz.svg')
-    plt.savefig('horiz.png')
+#    plt.savefig('horiz.png')
 
 
 main()

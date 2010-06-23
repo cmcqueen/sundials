@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Calculation of sun declination during the year.
 

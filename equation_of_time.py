@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Calculation of "equation of time".
 

@@ -12,6 +12,7 @@ Dependencies:
 
 import logging
 from collections import namedtuple
+import sys
 
 import matplotlib
 #matplotlib.use('pdf')
@@ -22,7 +23,7 @@ from matplotlib import text
 import numpy as np
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 # Named tuple to hold geographic location
 Location = namedtuple('Location', 'latitude, longitude')
@@ -66,7 +67,8 @@ def horiz_hour_angle(hour, location, timezone):
 
 def main():
     fig = plt.figure()
-    ax1 = fig.add_subplot(111, aspect='equal')
+#    ax1 = fig.add_subplot(111, aspect='equal')
+    ax1 = fig.add_axes([0, 0, 1.0, 1.0], aspect='equal')
 
     hour_angle_logger = logging.getLogger("hour.angle.horiz")
     for hour in range(HOUR_LINE_MIN, HOUR_LINE_MAX + 1):
@@ -90,12 +92,12 @@ def main():
     if LOCATION.latitude >= 0:
         # Up for northern hemisphere
         ax1.add_artist(text.Text(0, -0.25, "N", ha='center', va='center'))
-        arrow = matplotlib.patches.Arrow(0, -0.6, 0, 0.3, width=0.1, edgecolor='none')
+        arrow = matplotlib.patches.Arrow(0, -0.6, 0, 0.3, width=0.08, edgecolor='none')
         ax1.add_patch(arrow)
     else:
         # Down for the southern hemisphere
         ax1.add_artist(text.Text(0, -0.6, "N", ha='center', va='center'))
-        arrow = matplotlib.patches.Arrow(0, -0.25, 0, -0.3, width=0.1, edgecolor='none')
+        arrow = matplotlib.patches.Arrow(0, -0.25, 0, -0.3, width=0.08, edgecolor='none')
         ax1.add_patch(arrow)
 
     #plt.axis('tight')
@@ -104,10 +106,10 @@ def main():
     plt.xlim(-EXTENT_MAJOR, EXTENT_MAJOR)
     plt.ylim(-EXTENT_MINOR, EXTENT_MAJOR)
 
-    plt.show()
+#    plt.show()
 #    plt.savefig('horiz.pdf')
 #    plt.savefig('horiz.svg')
-#    plt.savefig('horiz.png')
+    plt.savefig('horiz.png')
 
 
 main()

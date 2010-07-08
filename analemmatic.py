@@ -230,4 +230,5 @@ def main():
 #    plt.savefig('analemmatic.png')
 
 
-main()
+if __name__ == '__main__':
+    main()

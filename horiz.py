@@ -113,4 +113,5 @@ def main():
 #    plt.savefig('horiz.png')
 
 
-main()
+if __name__ == '__main__':
+    main()

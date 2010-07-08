@@ -16,10 +16,22 @@ Dependencies:
 """
 
 import datetime
+from collections import namedtuple
 
 import numpy as np
 import scipy            # only strictly needed for the more accurate calculation in equation_of_time_accurate()
 import scipy.optimize
+
+# Named tuple to hold geographic location
+Location = namedtuple('Location', 'latitude, longitude')
+
+
+# If a location is given, a longitude correction is calculated and included in the graph.
+# If the sundial itself includes the longitude correction, just use the 0 value here.
+LOCATION = Location(0, 0)
+#LOCATION = Location(51.3809, -2.3603)   # Bath, England
+#LOCATION = Location(35.10, 138.86)      # Numazu, Japan
+#LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
 
 
 DAYS_PER_TROPICAL_YEAR = 365.242
@@ -38,6 +50,23 @@ DATE_END = datetime.date(2010, 1, 1)
 # Periapsis occurs on a slightly different date each year--varying by a couple
 # of days. 4th of January is about the average.
 DATE_PERIAPSIS = datetime.date(2009, 1, 4)
+
+
+def longitude_offset(location):
+    """Given a location, return the offset due to longitude, in degrees
+    Location's longitude is used. Latitude isn't needed.
+    """
+    longitude = location.longitude
+    longitude_per_hour = (360. / 24)
+    longitude_offset = longitude % longitude_per_hour
+    if longitude_offset > longitude_per_hour / 2:
+        longitude_offset -= longitude_per_hour
+    return longitude_offset
+
+
+def longitude_offset_min(location):
+    minute_per_longitude = 24 * 60 / 360.
+    return longitude_offset(location) * minute_per_longitude
 
 
 def mean_anomaly(day_number_n):
@@ -117,9 +146,19 @@ def main():
     date_range = np.arange(matplotlib.dates.date2num(DATE_START), matplotlib.dates.date2num(DATE_END), 0.1)
     day_numbers = date_range - matplotlib.dates.date2num(DATE_PERIAPSIS)
 
-    # Plot the accurate and/or simple calculations of equation of time.
-    plt.plot_date(date_range, equation_of_time_accurate(day_numbers), '-')
-#    plt.plot_date(date_range, equation_of_time_simple(day_numbers), '--')
+    # Calculate the accurate and/or simple calculations of equation of time.
+    solar_offset_min = equation_of_time_accurate(day_numbers) + longitude_offset_min(LOCATION)
+#    solar_offset_min = equation_of_time_simple(day_numbers) + longitude_offset_min(LOCATION)
+
+    # Plot the graph, either solar vs clock, or vice-versa.
+    if 1:
+        # Solar time vs clock time
+        plt.plot_date(date_range, solar_offset_min, '-')
+        plt.ylabel('solar time - clock time (min)')
+    else:
+        # Clock time vs solar time
+        plt.plot_date(date_range, -solar_offset_min, '-')
+        plt.ylabel('clock time - solar time (min)')
 
     # Set month lines
     ax = plt.subplot(111)
@@ -132,9 +171,6 @@ def main():
         tick.tick1line.set_markersize(0)
         tick.tick2line.set_markersize(0)
 
-
-    plt.ylabel('solar time - clock time (min)')
-#    plt.ylabel('clock time - solar time (min)')
     plt.grid(True)
 
     plt.show()

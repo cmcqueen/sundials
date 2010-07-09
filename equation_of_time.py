@@ -146,18 +146,20 @@ def main():
     date_range = np.arange(matplotlib.dates.date2num(DATE_START), matplotlib.dates.date2num(DATE_END), 0.1)
     day_numbers = date_range - matplotlib.dates.date2num(DATE_PERIAPSIS)
 
-    # Calculate the accurate and/or simple calculations of equation of time.
-    solar_offset_min = equation_of_time_accurate(day_numbers) + longitude_offset_min(LOCATION)
-#    solar_offset_min = equation_of_time_simple(day_numbers) + longitude_offset_min(LOCATION)
+    # Calculate the accurate and simple calculations of equation of time.
+    solar_offset_accurate_min = equation_of_time_accurate(day_numbers) + longitude_offset_min(LOCATION)
+    solar_offset_simple_min = equation_of_time_simple(day_numbers) + longitude_offset_min(LOCATION)
 
     # Plot the graph, either solar vs clock, or vice-versa.
     if 1:
         # Solar time vs clock time
-        plt.plot_date(date_range, solar_offset_min, '-')
+        plt.plot_date(date_range, solar_offset_accurate_min, '-')
+#        plt.plot_date(date_range, solar_offset_simple_min, '--')
         plt.ylabel('solar time - clock time (min)')
     else:
         # Clock time vs solar time
-        plt.plot_date(date_range, -solar_offset_min, '-')
+        plt.plot_date(date_range, -solar_offset_accurate_min, '-')
+#        plt.plot_date(date_range, -solar_offset_simple_min, '--')
         plt.ylabel('clock time - solar time (min)')
 
     # Set month lines

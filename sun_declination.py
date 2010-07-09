@@ -10,15 +10,12 @@ Calculations have been done according to the Wikipedia reference.
 Dependencies:
     - Python 2.x
     - NumPy
-    - SciPy (only strictly needed for the more accurate calculation)
     - matplotlib to plot the graph
 """
 
 import datetime
 
 import numpy as np
-import scipy            # only strictly needed for the more accurate calculation in sun_declination_accurate()
-import scipy.optimize
 
 
 DAYS_PER_TROPICAL_YEAR = 365.242
@@ -30,8 +27,6 @@ SUN_OBLIQUITY = 0.40910
 # Date range for drawing a graph.
 DATE_START = datetime.date(2009, 1, 1)
 DATE_END = datetime.date(2010, 1, 1)
-# Periapsis occurs on a slightly different date each year--varying by a couple
-# of days. 4th of January is about the average.
 DATE_SOLSTICE = datetime.date(2008, 12, 21)
 
 

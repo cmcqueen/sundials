@@ -151,7 +151,7 @@ def main():
     solar_offset_simple_min = equation_of_time_simple(day_numbers) + longitude_offset_min(LOCATION)
 
     # Plot the graph, either solar vs clock, or vice-versa.
-    if 1:
+    if False:
         # Solar time vs clock time
         plt.plot_date(date_range, solar_offset_accurate_min, '-')
 #        plt.plot_date(date_range, solar_offset_simple_min, '--')

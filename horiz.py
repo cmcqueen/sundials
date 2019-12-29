@@ -76,7 +76,7 @@ def horiz_hour_angle(hour, location):
 
 
 def main():
-    fig = plt.figure()
+    fig = plt.figure(num=LOCATION.location)
 #    ax1 = fig.add_subplot(111, aspect='equal')
     ax1 = fig.add_axes([0, 0, 1.0, 1.0], aspect='equal')
 

@@ -176,10 +176,10 @@ def main():
     plt.grid(True)
     plt.gcf().canvas.set_window_title(' '.join(('Equation of Time', LOCATION.location)))
 
-    plt.show()
 #    plt.savefig('equation_of_time.pdf')
 #    plt.savefig('equation_of_time.svg')
 #    plt.savefig('equation_of_time.png')
+    plt.show()
 
 
 if __name__ == '__main__':

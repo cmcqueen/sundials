@@ -236,10 +236,10 @@ def main():
     plt.xlim(-EXTENT_MAJOR, EXTENT_MAJOR)
     plt.ylim(-EXTENT_MINOR, EXTENT_MINOR)
 
-    plt.show()
 #    plt.savefig('analemmatic.pdf')
 #    plt.savefig('analemmatic.svg')
 #    plt.savefig('analemmatic.png')
+    plt.show()
 
 
 if __name__ == '__main__':

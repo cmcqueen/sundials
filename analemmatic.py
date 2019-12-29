@@ -34,17 +34,30 @@ import sun_declination
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 # Named tuple to hold geographic location
-Location = namedtuple('Location', 'latitude, longitude')
+Location = namedtuple('Location', 'latitude, longitude, location')
 
 
-#LOCATION = Location(51.3809, -2.3603)   # Bath, England
-LOCATION = Location(35.10, 138.86)      # Numazu, Japan
-#LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
-TIMEZONE = 9
-HOUR_LINE_MIN = 5
-HOUR_LINE_MAX = 19
-EXTENT_MAJOR = 1.2
-EXTENT_MINOR = 0.75
+if True:
+    LOCATION = Location(-37.81, 144.96, 'Melbourne, Victoria, Australia')
+    TIMEZONE = 10
+    HOUR_LINE_MIN = 5
+    HOUR_LINE_MAX = 20
+    EXTENT_MAJOR = 1.2
+    EXTENT_MINOR = 0.75
+elif False:
+    LOCATION = Location(35.10, 138.86, 'Numazu, Japan')
+    TIMEZONE = 9
+    HOUR_LINE_MIN = 4
+    HOUR_LINE_MAX = 19
+    EXTENT_MAJOR = 1.2
+    EXTENT_MINOR = 0.75
+else:
+    LOCATION = Location(51.3809, -2.3603, 'Bath, England')
+    TIMEZONE = 0
+    HOUR_LINE_MIN = 3
+    HOUR_LINE_MAX = 21
+    EXTENT_MAJOR = 1.2
+    EXTENT_MINOR = 1.1
 NUMERAL_OFFSET = 1.1
 DATE_SCALE_X_EXTENT = 0.15
 DATE_SCALE_TICK_X = 0.1
@@ -98,7 +111,7 @@ def analemmatic_horiz_hour_position(hour, location, timezone):
 
 
 def main():
-    fig = plt.figure()
+    fig = plt.figure(num=LOCATION.location)
 #    ax1 = fig.add_subplot(111, aspect='equal')
     ax1 = fig.add_axes([0,0,1.0,1.0], aspect='equal')
 
@@ -111,8 +124,10 @@ def main():
     ellipse_logger.info("Ellipse semiminor axis length %g" % ellipse_minor_axis)
     ellipse_logger.info("Ellipse foci x offset %g" % ellipse_foci_offset)
     # Draw an ellipse arc
-    ellipse_angle_min = rotated_equatorial_hour_angle(HOUR_LINE_MIN, LOCATION, TIMEZONE)
-    ellipse_angle_max = rotated_equatorial_hour_angle(HOUR_LINE_MAX, LOCATION, TIMEZONE)
+    ellipse_pos_min = analemmatic_horiz_hour_position(HOUR_LINE_MIN, LOCATION, TIMEZONE)
+    ellipse_angle_min = np.arctan2(ellipse_pos_min[1], ellipse_pos_min[0])
+    ellipse_pos_max = analemmatic_horiz_hour_position(HOUR_LINE_MAX, LOCATION, TIMEZONE)
+    ellipse_angle_max = np.arctan2(ellipse_pos_max[1], ellipse_pos_max[0])
     ellipse_rotation = 0
     if LOCATION.latitude < 0:
         # For southern hemisphere, rotate the whole thing around by 180

@@ -23,15 +23,15 @@ import scipy            # only strictly needed for the more accurate calculation
 import scipy.optimize
 
 # Named tuple to hold geographic location
-Location = namedtuple('Location', 'latitude, longitude')
+Location = namedtuple('Location', 'latitude, longitude, location')
 
 
 # If a location is given, a longitude correction is calculated and included in the graph.
 # If the sundial itself includes the longitude correction, just use the 0 value here.
-LOCATION = Location(0, 0)
-#LOCATION = Location(51.3809, -2.3603)   # Bath, England
-#LOCATION = Location(35.10, 138.86)      # Numazu, Japan
-#LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
+LOCATION = Location(0, 0, '')
+#LOCATION = Location(51.3809, -2.3603, 'Bath, England')
+#LOCATION = Location(35.10, 138.86, 'Numazu, Japan')
+#LOCATION = Location(-37.81, 144.96, 'Melbourne, Victoria, Australia')
 
 
 DAYS_PER_TROPICAL_YEAR = 365.242

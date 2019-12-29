@@ -34,26 +34,23 @@ import sun_declination
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 # Named tuple to hold geographic location
-Location = namedtuple('Location', 'latitude, longitude, location')
+Location = namedtuple('Location', 'latitude, longitude, timezone, location')
 
 
 if True:
-    LOCATION = Location(-37.81, 144.96, 'Melbourne, Victoria, Australia')
-    TIMEZONE = 10
+    LOCATION = Location(-37.81, 144.96, 10, 'Melbourne, Victoria, Australia')
     HOUR_LINE_MIN = 5
     HOUR_LINE_MAX = 20
     EXTENT_MAJOR = 1.2
     EXTENT_MINOR = 0.75
-elif False:
-    LOCATION = Location(35.10, 138.86, 'Numazu, Japan')
-    TIMEZONE = 9
+elif True:
+    LOCATION = Location(35.10, 138.86, 9, 'Numazu, Japan')
     HOUR_LINE_MIN = 4
     HOUR_LINE_MAX = 19
     EXTENT_MAJOR = 1.2
     EXTENT_MINOR = 0.75
 else:
-    LOCATION = Location(51.3809, -2.3603, 'Bath, England')
-    TIMEZONE = 0
+    LOCATION = Location(51.3809, -2.3603, 0, 'Bath, England')
     HOUR_LINE_MIN = 3
     HOUR_LINE_MAX = 21
     EXTENT_MAJOR = 1.2
@@ -63,31 +60,31 @@ DATE_SCALE_X_EXTENT = 0.15
 DATE_SCALE_TICK_X = 0.1
 DATE_SCALE_TEXT_X = 0.025
 
-def equatorial_hour_angle(hour, location, timezone):
+def equatorial_hour_angle(hour, location):
     """Midnight is angle 0.
     6 am is angle pi/2.
     midday is angle pi.
     etc."""
-    equatorial_angle = (hour - timezone) * 2 * np.pi / 24 + (np.deg2rad(location.longitude))
+    equatorial_angle = (hour - location.timezone) * 2 * np.pi / 24 + (np.deg2rad(location.longitude))
     logging.getLogger("hour.angle.equ").debug("For hour %d, equatorial angle %g" % (hour, np.rad2deg(equatorial_angle)))
     return equatorial_angle
 
 
-def rotated_equatorial_hour_angle(hour, location, timezone):
+def rotated_equatorial_hour_angle(hour, location):
     """Angles rotated so midday is up on mathematical angle range.
     Midday is pi/2.
     6 am is pi.
     6 pm is 0.
     etc."""
-    equatorial_angle = equatorial_hour_angle(hour, location, timezone)
+    equatorial_angle = equatorial_hour_angle(hour, location)
     equatorial_angle_from_solar_noon = equatorial_angle - np.pi
     # Angle currently is angle referenced from solar noon, positive (pm) towards the east.
     # Change to mathematical angle, anticlockwise from 0 in the east.
     return np.pi / 2 - equatorial_angle_from_solar_noon
 
 
-def analemmatic_horiz_hour_angle(hour, location, timezone):
-    equatorial_angle = equatorial_hour_angle(hour, location, timezone)
+def analemmatic_horiz_hour_angle(hour, location):
+    equatorial_angle = equatorial_hour_angle(hour, location)
     equatorial_angle_from_solar_noon = equatorial_angle - np.pi
     logging.getLogger("hour.angle.equ.noon").debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
     # negative (am) is towards the west; positive (pm) towards the east
@@ -101,8 +98,8 @@ def analemmatic_horiz_hour_angle(hour, location, timezone):
     return np.pi / 2 - horiz_angle_from_solar_noon
 
 
-def analemmatic_horiz_hour_position(hour, location, timezone):
-    rotated_equatorial_angle = rotated_equatorial_hour_angle(hour, location, timezone)
+def analemmatic_horiz_hour_position(hour, location):
+    rotated_equatorial_angle = rotated_equatorial_hour_angle(hour, location)
     a_x = np.cos(rotated_equatorial_angle)
     a_y = np.sin(rotated_equatorial_angle)
     a_y *= np.sin(np.deg2rad(location.latitude))
@@ -124,9 +121,9 @@ def main():
     ellipse_logger.info("Ellipse semiminor axis length %g" % ellipse_minor_axis)
     ellipse_logger.info("Ellipse foci x offset %g" % ellipse_foci_offset)
     # Draw an ellipse arc
-    ellipse_pos_min = analemmatic_horiz_hour_position(HOUR_LINE_MIN, LOCATION, TIMEZONE)
+    ellipse_pos_min = analemmatic_horiz_hour_position(HOUR_LINE_MIN, LOCATION)
     ellipse_angle_min = np.arctan2(ellipse_pos_min[1], ellipse_pos_min[0])
-    ellipse_pos_max = analemmatic_horiz_hour_position(HOUR_LINE_MAX, LOCATION, TIMEZONE)
+    ellipse_pos_max = analemmatic_horiz_hour_position(HOUR_LINE_MAX, LOCATION)
     ellipse_angle_max = np.arctan2(ellipse_pos_max[1], ellipse_pos_max[0])
     ellipse_rotation = 0
     if LOCATION.latitude < 0:
@@ -146,8 +143,8 @@ def main():
     analemmatic_positions_x = []
     analemmatic_positions_y = []
     for hour in range(HOUR_LINE_MIN, HOUR_LINE_MAX + 1):
-        analemmatic_angle = analemmatic_horiz_hour_angle(hour, LOCATION, TIMEZONE)
-        (analemmatic_position_x, analemmatic_position_y) = analemmatic_horiz_hour_position(hour, LOCATION, TIMEZONE)
+        analemmatic_angle = analemmatic_horiz_hour_angle(hour, LOCATION)
+        (analemmatic_position_x, analemmatic_position_y) = analemmatic_horiz_hour_position(hour, LOCATION)
         if LOCATION.latitude < 0:
             # For southern hemisphere, rotate the whole thing around by 180
             # degrees, so "up" is consistently from the sundial viewer's

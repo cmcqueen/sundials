@@ -27,32 +27,41 @@ import numpy as np
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 # Named tuple to hold geographic location
-Location = namedtuple('Location', 'latitude, longitude')
+Location = namedtuple('Location', 'latitude, longitude, timezone, location')
 
 
-LOCATION = Location(35.10, 138.86)      # Numazu, Japan
-#LOCATION = Location(-37.81, 144.96)     # Melbourne, Victoria, Australia
-TIMEZONE = 9
-HOUR_LINE_MIN = 5
-HOUR_LINE_MAX = 19
 GNOMON_LENGTH = 0.9
 NUMERAL_OFFSET = 1.07
 EXTENT_MAJOR = 1.15
 EXTENT_MINOR = 0.7
+if True:
+    LOCATION = Location(-37.81, 144.96, 10, 'Melbourne, Victoria, Australia')
+    HOUR_LINE_MIN = 5
+    HOUR_LINE_MAX = 20
+elif True:
+    LOCATION = Location(35.10, 138.86, 9, 'Numazu, Japan')
+    HOUR_LINE_MIN = 4
+    HOUR_LINE_MAX = 19
+else:
+    LOCATION = Location(51.3809, -2.3603, 0, 'Bath, England')
+    HOUR_LINE_MIN = 3
+    HOUR_LINE_MAX = 21
+    EXTENT_MAJOR = 1.15
+    EXTENT_MINOR = 1.0
 
 
-def equatorial_hour_angle(hour, location, timezone):
+def equatorial_hour_angle(hour, location):
     """Midnight is angle 0.
     6 am is angle pi/2.
     midday is angle pi.
     etc."""
-    equatorial_angle = (hour - timezone) * 2 * np.pi / 24 + (np.deg2rad(location.longitude))
+    equatorial_angle = (hour - location.timezone) * 2 * np.pi / 24 + (np.deg2rad(location.longitude))
     logging.getLogger("hour.angle.equ").debug("For hour %d, equatorial angle %g" % (hour, np.rad2deg(equatorial_angle)))
     return equatorial_angle
 
 
-def horiz_hour_angle(hour, location, timezone):
-    equatorial_angle = equatorial_hour_angle(hour, location, timezone)
+def horiz_hour_angle(hour, location):
+    equatorial_angle = equatorial_hour_angle(hour, location)
     equatorial_angle_from_solar_noon = equatorial_angle - np.pi
     logging.getLogger("hour.angle.equ.noon").debug("For hour %d, equatorial angle from solar noon %g" % (hour, equatorial_angle_from_solar_noon * 180 / np.pi))
     # negative (am) is towards the west; positive (pm) towards the east
@@ -73,7 +82,7 @@ def main():
 
     hour_angle_logger = logging.getLogger("hour.angle.horiz")
     for hour in range(HOUR_LINE_MIN, HOUR_LINE_MAX + 1):
-        horiz_angle = horiz_hour_angle(hour, LOCATION, TIMEZONE)
+        horiz_angle = horiz_hour_angle(hour, LOCATION)
         if LOCATION.latitude < 0:
             # For southern hemisphere, rotate the whole thing around by 180
             # degrees, so "up" is consistently from the sundial viewer's
